@@ -7,7 +7,11 @@ use tonic::transport::Channel;
 
 use crate::error::Result;
 
-pub async fn query_wasm_smart<M, R>(client: &mut QueryClient<Channel>, contract: &str, msg: &M) -> Result<R>
+pub async fn query_wasm_smart<M, R>(
+    client: &mut QueryClient<Channel>,
+    contract: &str,
+    msg: &M,
+) -> Result<R>
 where
     M: Serialize + ?Sized,
     R: DeserializeOwned,
