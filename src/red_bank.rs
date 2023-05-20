@@ -8,7 +8,7 @@ use cosmos_sdk_proto::cosmwasm::wasm::v1::{
 };
 use cosmwasm_std::{from_slice, to_vec, Uint128};
 use mars_red_bank::interest_rates::{get_underlying_debt_amount, get_underlying_liquidity_amount};
-use mars_red_bank_types::red_bank::{self, Market};
+use mars_red_bank_types::red_bank::{Market, QueryMsg};
 use serde::Serialize;
 use tonic::transport::Channel;
 
@@ -35,7 +35,7 @@ pub async fn query_red_bank_tvl(client: &mut QueryClient<Channel>) -> Result<Red
         let new_markets_raw = client
             .smart_contract_state(QuerySmartContractStateRequest {
                 address: RED_BANK.into(),
-                query_data: to_vec(&red_bank::QueryMsg::Markets {
+                query_data: to_vec(&QueryMsg::Markets {
                     start_after: start_after.clone(),
                     limit: Some(10), // the max limit
                 })?,
