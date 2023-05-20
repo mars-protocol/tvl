@@ -20,7 +20,9 @@ async fn main() -> Result<()> {
     let prices = query_prices().await?;
     print_prices(&prices)?;
 
+    println!("connecting to osmosis grpc...");
     let mut client = QueryClient::connect(OSMOSIS_GRPC).await?;
+    println!("done!");
 
     println!("querying red bank tvl...");
     let red_bank_tvl = query_red_bank_tvl(&mut client).await?;
