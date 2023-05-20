@@ -30,7 +30,7 @@ pub async fn query_prices() -> Result<Prices> {
                 .iter()
                 .find(|asset| asset.coingecko_id == coingecko_id)
                 .ok_or_else(|| Error::AssetNotFound {
-                    denom_or_id: coingecko_id.into(),
+                    denom_or_id: coingecko_id,
                 })?;
 
             let price = prices_by_currency
