@@ -1,4 +1,4 @@
-# TVL
+# tvl
 
 Code for computing Mars protocol's TVL
 
