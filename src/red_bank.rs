@@ -80,8 +80,6 @@ pub async fn query_red_bank_tvl(client: &mut QueryClient<Channel>) -> Result<Red
     Ok(tvl)
 }
 
-
-
 #[derive(Serialize)]
 struct PrintableRedBankTVL {
     symbol:        &'static str,
