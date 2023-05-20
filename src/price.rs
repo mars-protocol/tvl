@@ -54,7 +54,6 @@ struct PrintablePrice {
 }
 
 pub fn print_prices(prices: &Prices) -> Result<()> {
-    // use btreemap here so that prices are sorted by symbol alphabetically
     let printable_prices = prices
         .iter()
         .map(|(asset, price)| PrintablePrice {
