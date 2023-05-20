@@ -2,6 +2,7 @@ mod asset;
 mod error;
 mod price;
 mod red_bank;
+mod utils;
 
 use cosmos_sdk_proto::cosmwasm::wasm::v1::query_client::QueryClient;
 

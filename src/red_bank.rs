@@ -1,12 +1,6 @@
-use std::{
-    collections::HashMap,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::collections::HashMap;
 
-use cosmos_sdk_proto::cosmwasm::wasm::v1::{
-    query_client::QueryClient, QuerySmartContractStateRequest,
-};
-use cosmwasm_std::{from_slice, to_vec, Uint128};
+use cosmos_sdk_proto::cosmwasm::wasm::v1::query_client::QueryClient;
 use mars_red_bank::interest_rates::{get_underlying_debt_amount, get_underlying_liquidity_amount};
 use mars_red_bank_types::red_bank::{Market, QueryMsg};
 use serde::Serialize;
@@ -16,6 +10,7 @@ use crate::{
     asset::{Asset, ASSETS},
     error::Result,
     price::Prices,
+    utils::{current_timestamp, query_wasm_smart, shift_decimals},
 };
 
 const RED_BANK: &str = "osmo1c3ljch9dfw5kf52nfwpxd2zmj2ese7agnx0p9tenkrryasrle5sqf3ftpg";
@@ -32,19 +27,15 @@ pub async fn query_red_bank_tvl(client: &mut QueryClient<Channel>) -> Result<Red
     let mut start_after: Option<String> = None;
 
     loop {
-        let new_markets_raw = client
-            .smart_contract_state(QuerySmartContractStateRequest {
-                address: RED_BANK.into(),
-                query_data: to_vec(&QueryMsg::Markets {
-                    start_after: start_after.clone(),
-                    limit: Some(10), // the max limit
-                })?,
-            })
-            .await?
-            .into_inner()
-            .data;
-
-        let new_markets: Vec<Market> = from_slice(&new_markets_raw)?;
+        let new_markets: Vec<Market> = query_wasm_smart(
+            client,
+            RED_BANK,
+            &QueryMsg::Markets {
+                start_after: start_after.clone(),
+                limit: Some(10), // the max limit
+            },
+        )
+        .await?;
 
         let Some(last) = new_markets.last() else {
             break;
@@ -89,16 +80,7 @@ pub async fn query_red_bank_tvl(client: &mut QueryClient<Channel>) -> Result<Red
     Ok(tvl)
 }
 
-fn current_timestamp() -> u64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("time went backwards")
-        .as_secs()
-}
 
-fn shift_decimals(amount_raw: Uint128, decimals: u32) -> f64 {
-    amount_raw.u128() as f64 / 10usize.pow(decimals) as f64
-}
 
 #[derive(Serialize)]
 struct PrintableRedBankTVL {
