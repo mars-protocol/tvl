@@ -1,14 +1,25 @@
 [package]
-name          = "rust-template"
-description   = "Template for single-crate Rust projects"
+name          = "tvl"
+description   = "Code for computing Mars protocol's TVL"
 version       = "0.0.0"
-authors       = ["Larry Engineer <gm@larry.engineer>"]
+authors       = ["larry <larry@delphilabs.io>"]
 edition       = "2021"
-rust-version  = "1.65"
-license       = "UNLICENSED"
-homepage      = "https://larry.engineer"
-repository    = "https://github.com/steak-enjoyers/rust-template"
-documentation = "https://github.com/steak-enjoyers/rust-template#readme"
-keywords      = ["template"]
+rust-version  = "1.69.0"
+license       = "TBD"
+homepage      = "https://marsprotocol.io"
+repository    = "https://github.com/mars-protocol/tvl"
+documentation = "https://github.com/mars-protocol/tvl#readme"
+keywords      = ["defi", "mars-protocol"]
 
 [dependencies]
+cosmos-sdk-proto    = { version = "0.19.0", features = ["cosmwasm", "grpc"] }
+cosmwasm-std        = "1.2"
+mars-red-bank       = { git = "https://github.com/mars-protocol/red-bank", tag = "v1.0.1" }
+mars-red-bank-types = { git = "https://github.com/mars-protocol/red-bank", tag = "v1.0.1" }
+mars-rover          = { git = "https://github.com/mars-protocol/v2-fields-of-mars", tag = "v1.0.0" }
+reqwest             = { version = "0.11", features = ["json"] }
+serde               = "1"
+serde_json          = "1"
+thiserror           = "1"
+tokio               = { version = "1", features = ["full"] }
+tonic               = "0.9"

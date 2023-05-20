@@ -1,6 +1,6 @@
-# Rust Template
+# TVL
 
-Template for single-crate Rust projects
+Code for computing Mars protocol's TVL
 
 ## License
 
