@@ -46,12 +46,12 @@ pub async fn query_red_bank_tvl(client: &mut QueryClient<Channel>) -> Result<Red
 
         let new_markets: Vec<Market> = from_slice(&new_markets_raw)?;
 
-        let Some(last) = new_markets.last().cloned() else {
+        let Some(last) = new_markets.last() else {
             break;
         };
 
+        start_after = Some(last.denom.clone());
         markets.extend(new_markets);
-        start_after = Some(last.denom);
     }
 
     let mut tvl: RedBankTVL = HashMap::new();
