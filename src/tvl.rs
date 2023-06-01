@@ -9,7 +9,7 @@ use crate::{
     prices::{price_of_asset, Prices},
 };
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct TVL {
     pub deposits: HashMap<&'static Asset, f64>,
     pub borrows: HashMap<&'static Asset, f64>,

@@ -25,15 +25,23 @@ pub fn increase_amount_raw(
     asset: &'static Asset,
     amount_raw: u128,
 ) {
-    *tvl.entry(asset).or_insert(0.) += shift_decimals(amount_raw, asset.decimals);
+    increase_amount(tvl, asset, shift_decimals(amount_raw, asset.decimals));
 }
 
-pub fn decrease_amount_raw(
+pub fn increase_amount(
     tvl: &mut HashMap<&'static Asset, f64>,
     asset: &'static Asset,
-    amount_raw: u128,
+    amount: f64,
 ) {
-    *tvl.entry(asset).or_insert(0.) -= shift_decimals(amount_raw, asset.decimals);
+    *tvl.entry(asset).or_insert(0.) += amount;
+}
+
+pub fn decrease_amount(
+    tvl: &mut HashMap<&'static Asset, f64>,
+    asset: &'static Asset,
+    amount: f64,
+) {
+    *tvl.entry(asset).or_insert(0.) -= amount;
 }
 
 pub fn current_timestamp() -> u64 {

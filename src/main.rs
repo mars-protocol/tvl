@@ -5,9 +5,7 @@ mod prices;
 mod tvl;
 mod utils;
 
-use std::{
-    collections::HashMap,
-};
+use std::collections::HashMap;
 
 use cosmos_sdk_proto::cosmwasm::wasm::v1 as wasm;
 use cosmwasm_std::{from_slice, to_vec, Coin, Empty, Uint128};
@@ -30,7 +28,7 @@ use crate::{
     error::{Error, Result},
     prices::query_prices,
     tvl::{print_tvl, TVL},
-    utils::{current_timestamp, parse_gamm_denom},
+    utils::{current_timestamp, decrease_amount, increase_amount, parse_gamm_denom},
 };
 
 const OSMOSIS_GRPC: &str = "http://backup.larry.coffee:9090";
@@ -62,11 +60,18 @@ async fn main() -> Result<()> {
     let rover_tvl = query_rover_tvl(&mut wasm_client, &mut gamm_client).await?;
     println!("done!");
 
+    println!("computing total protocol tvl...");
+    let protocol_tvl = compute_protocol_tvl(&red_bank_tvl, &rover_tvl);
+    println!("done!");
+
     println!("------------------------------------ RED BANK ------------------------------------");
     print_tvl(&red_bank_tvl, &prices)?;
 
     println!("------------------------------------- ROVER --------------------------------------");
     print_tvl(&rover_tvl, &prices)?;
+
+    println!("--------------------------------- TOTAL PROTOCOL ---------------------------------");
+    print_tvl(&protocol_tvl, &prices)?;
 
     Ok(())
 }
@@ -240,6 +245,21 @@ async fn query_rover_tvl(
     }
 
     Ok(tvl)
+}
+
+fn compute_protocol_tvl(red_bank_tvl: &TVL, rover_tvl: &TVL) -> TVL {
+    let mut protocol_tvl = red_bank_tvl.clone();
+
+    for (asset, amount) in &rover_tvl.deposits {
+        increase_amount(&mut protocol_tvl.deposits, asset, *amount);
+    }
+
+    for (asset, amount) in &rover_tvl.borrows {
+        decrease_amount(&mut protocol_tvl.deposits, asset, *amount);
+        decrease_amount(&mut protocol_tvl.borrows, asset, *amount);
+    }
+
+    protocol_tvl
 }
 
 pub struct PoolResponse {
