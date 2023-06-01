@@ -1,10 +1,19 @@
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error(transparent)]
+    Decode(#[from] prost::DecodeError),
+
+    #[error(transparent)]
     GRPCStatus(#[from] tonic::Status),
 
     #[error(transparent)]
     GRPCTransport(#[from] tonic::transport::Error),
+
+    #[error(transparent)]
+    MultiplyRatio(#[from] cosmwasm_std::CheckedMultiplyRatioError),
+
+    #[error(transparent)]
+    ParseInt(#[from] std::num::ParseIntError),
 
     #[error(transparent)]
     Reqwest(#[from] reqwest::Error),
@@ -20,9 +29,29 @@ pub enum Error {
         denom_or_id: String,
     },
 
+    #[error("denom is not an osmosis gamm token: `{denom}`")]
+    NotGammToken {
+        denom: String,
+    },
+
+    #[error("osmosis pool not found with id `{pool_id}`")]
+    PoolNotFound {
+        pool_id: u64,
+    },
+
     #[error("no price found for asset `{symbol}`")]
     PriceNotFound {
         symbol: String,
+    },
+
+    #[error("token for pool `{pool_id}` is undefined")]
+    TokenUndefined {
+        pool_id: u64,
+    },
+
+    #[error("total shares for pool `{pool_id}` is undefined")]
+    TotalSharesUndefined {
+        pool_id: u64,
     },
 }
 

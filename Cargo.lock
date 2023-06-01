@@ -378,6 +378,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "cw-vault-standard"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c2e72c053adf399c2dc95cf07ee0c8723dfceeb13ba127cc96ba31d96e454919"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "schemars",
+ "serde",
+]
+
+[[package]]
 name = "cw2"
 version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1053,7 +1065,7 @@ dependencies = [
  "cosmwasm-std",
  "cw-storage-plus 1.0.1",
  "cw-utils 1.0.1",
- "cw-vault-standard",
+ "cw-vault-standard 0.2.0",
  "cw721",
  "cw721-base",
  "mars-health 1.0.0",
@@ -1215,6 +1227,18 @@ dependencies = [
  "libc",
  "pkg-config",
  "vcpkg",
+]
+
+[[package]]
+name = "osmosis-proto"
+version = "0.0.0"
+source = "git+https://github.com/larry0x/osmosis-proto?rev=03af3e2#03af3e288d6be5e9016079017fb82faaf907e023"
+dependencies = [
+ "cosmos-sdk-proto",
+ "prost",
+ "prost-types",
+ "tendermint-proto",
+ "tonic",
 ]
 
 [[package]]
@@ -2035,9 +2059,12 @@ version = "0.0.0"
 dependencies = [
  "cosmos-sdk-proto",
  "cosmwasm-std",
+ "cw-vault-standard 0.3.0",
  "mars-red-bank",
  "mars-red-bank-types 1.0.1",
  "mars-rover",
+ "osmosis-proto",
+ "prost",
  "reqwest",
  "serde",
  "serde_json",

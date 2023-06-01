@@ -52,3 +52,15 @@ pub const ASSETS: &[Asset] = &[
         decimals:     18,
     },
 ];
+
+pub fn asset_by_denom(denom: &str) -> Option<&'static Asset> {
+    ASSETS
+        .iter()
+        .find(|asset| asset.denom == denom)
+}
+
+pub fn asset_by_coingecko_id(coingecko_id: &str) -> Option<&'static Asset> {
+    ASSETS
+        .iter()
+        .find(|asset| asset.coingecko_id == coingecko_id)
+}

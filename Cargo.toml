@@ -14,9 +14,12 @@ keywords      = ["defi", "mars-protocol"]
 [dependencies]
 cosmos-sdk-proto    = { version = "0.19.0", features = ["cosmwasm", "grpc"] }
 cosmwasm-std        = "1.2"
+cw-vault-standard   = "0.3"
 mars-red-bank       = { git = "https://github.com/mars-protocol/red-bank", tag = "v1.0.1" }
 mars-red-bank-types = { git = "https://github.com/mars-protocol/red-bank", tag = "v1.0.1" }
 mars-rover          = { git = "https://github.com/mars-protocol/v2-fields-of-mars", tag = "v1.0.0" }
+osmosis-proto       = { git = "https://github.com/larry0x/osmosis-proto", rev = "03af3e2" }
+prost               = "0.11"
 reqwest             = { version = "0.11", features = ["json"] }
 serde               = "1"
 serde_json          = "1"

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use serde::Serialize;
 
 use crate::{
-    asset::{Asset, ASSETS},
+    asset::{asset_by_coingecko_id, Asset, ASSETS},
     error::{Error, Result},
 };
 
@@ -26,9 +26,7 @@ pub async fn query_prices() -> Result<Prices> {
         .await?
         .into_iter()
         .try_for_each(|(coingecko_id, prices_by_currency)| -> Result<_> {
-            let asset = ASSETS
-                .iter()
-                .find(|asset| asset.coingecko_id == coingecko_id)
+            let asset = asset_by_coingecko_id(&coingecko_id)
                 .ok_or_else(|| Error::AssetNotFound {
                     denom_or_id: coingecko_id,
                 })?;
