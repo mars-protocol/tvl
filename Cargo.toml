@@ -19,6 +19,7 @@ mars-red-bank       = { git = "https://github.com/mars-protocol/red-bank", tag =
 mars-red-bank-types = { git = "https://github.com/mars-protocol/red-bank", tag = "v1.0.1" }
 mars-rover          = { git = "https://github.com/mars-protocol/v2-fields-of-mars", tag = "v1.0.0" }
 osmosis-proto       = { git = "https://github.com/larry0x/osmosis-proto", rev = "03af3e2" }
+prettytable         = "0.10"
 prost               = "0.11"
 reqwest             = { version = "0.11", features = ["json"] }
 serde               = "1"

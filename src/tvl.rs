@@ -1,51 +1,91 @@
 use std::collections::HashMap;
-use serde::Serialize;
 
-use crate::{asset::Asset, error::Result, price::Prices};
+use prettytable::{row, Table};
 
-pub type TVL = HashMap<&'static Asset, TVLItem>;
+use crate::{
+    asset::Asset,
+    error::Result,
+    prices::{price_of_asset, Prices},
+};
 
 #[derive(Default)]
-pub struct TVLItem {
-    pub deposited: f64,
-    pub borrowed:  f64,
+pub struct TVL {
+    pub deposits: HashMap<&'static Asset, f64>,
+    pub borrows: HashMap<&'static Asset, f64>,
 }
 
-#[derive(Serialize)]
-struct PrintableTVL {
-    symbol:        &'static str,
-    deposited:     f64,
-    deposited_usd: f64,
-    borrowed:      f64,
-    borrowed_usd:  f64,
+struct Row {
+    pub symbol: &'static str,
+    pub amount: f64,
+    pub value: f64,
 }
 
 pub fn print_tvl(tvl: &TVL, prices: &Prices) -> Result<()> {
-    let printable_tvl = tvl
+    let mut deposits = tvl
+        .deposits
         .iter()
-        .filter_map(|(asset, item)| {
-            let Some(price) = prices.get(asset) else {
-                return None;
-            };
-
-            Some(PrintableTVL {
-                symbol:        asset.symbol,
-                deposited:     item.deposited,
-                deposited_usd: item.deposited * price,
-                borrowed:      item.borrowed,
-                borrowed_usd:  item.borrowed * price,
+        .map(|(asset, amount)| {
+            Ok(Row {
+                symbol: &asset.symbol,
+                amount: *amount,
+                value: amount * price_of_asset(prices, asset)?,
             })
         })
-        .collect::<Vec<_>>();
+        .collect::<Result<Vec<_>>>()?;
 
-    let tvl_str = serde_json::to_string_pretty(&printable_tvl)?;
-    println!("{tvl_str}");
+    let mut borrows = tvl
+        .borrows
+        .iter()
+        .map(|(asset, amount)| {
+            Ok(Row {
+                symbol: &asset.symbol,
+                amount: *amount,
+                value: amount * price_of_asset(prices, asset)?,
+            })
+        })
+        .collect::<Result<Vec<_>>>()?;
 
-    let total_deposited = printable_tvl.iter().fold(0f64, |acc, curr| acc + curr.deposited_usd);
-    println!("total deposited: {total_deposited}");
+    sort_rows_by_value(&mut deposits);
+    sort_rows_by_value(&mut borrows);
 
-    let total_borrowed = printable_tvl.iter().fold(0f64, |acc, curr| acc + curr.borrowed_usd);
-    println!("total borrowed: {total_borrowed}");
+    println!("DEPOSITS:");
+    print_rows(&deposits);
+
+    println!("BORROWS:");
+    print_rows(&borrows);
 
     Ok(())
+}
+
+fn sort_rows_by_value(rows: &mut [Row]) {
+    // f64 doesn't implement Ord, so we can't use sort_by_key
+    // this unwrap panics if both f64 values are NaN
+    // https://doc.rust-lang.org/std/primitive.slice.html#method.sort_by
+    rows.sort_by(|a, b| b.value.partial_cmp(&a.value).unwrap());
+}
+
+fn print_rows(rows: &[Row]) {
+    let total_value = rows.iter().fold(0., |curr, acc| curr + acc.value);
+
+    let mut table = Table::new();
+
+    for row in rows {
+        if row.amount > 0. {
+            table.add_row(row![
+                row.symbol,
+                row.amount,
+                r->row.value,
+            ]);
+        }
+    }
+
+    table.add_row(row![
+        "Total",
+        "-",
+        r->total_value,
+    ]);
+
+    table.set_titles(row!["Token", "Amount", "Value ($)"]);
+    table.set_format(*prettytable::format::consts::FORMAT_BOX_CHARS);
+    table.printstd();
 }

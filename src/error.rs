@@ -10,9 +10,6 @@ pub enum Error {
     GRPCTransport(#[from] tonic::transport::Error),
 
     #[error(transparent)]
-    MultiplyRatio(#[from] cosmwasm_std::CheckedMultiplyRatioError),
-
-    #[error(transparent)]
     ParseInt(#[from] std::num::ParseIntError),
 
     #[error(transparent)]

@@ -1,5 +1,7 @@
 use serde::Serialize;
 
+use crate::error::{Error, Result};
+
 #[derive(Serialize, PartialEq, Eq, Hash)]
 pub struct Asset {
     pub symbol:       &'static str,
@@ -53,14 +55,20 @@ pub const ASSETS: &[Asset] = &[
     },
 ];
 
-pub fn asset_by_denom(denom: &str) -> Option<&'static Asset> {
+pub fn asset_by_denom(denom: &str) -> Result<&'static Asset> {
     ASSETS
         .iter()
         .find(|asset| asset.denom == denom)
+        .ok_or_else(|| Error::AssetNotFound {
+            denom_or_id: denom.into(),
+        })
 }
 
-pub fn asset_by_coingecko_id(coingecko_id: &str) -> Option<&'static Asset> {
+pub fn asset_by_coingecko_id(coingecko_id: &str) -> Result<&'static Asset> {
     ASSETS
         .iter()
         .find(|asset| asset.coingecko_id == coingecko_id)
+        .ok_or_else(|| Error::AssetNotFound {
+            denom_or_id: coingecko_id.into(),
+        })
 }
