@@ -10,9 +10,8 @@ use crate::{
     error::Result,
     tvl::{TVL, TVLItem},
     utils::{current_timestamp, query_wasm_smart, shift_decimals},
+    RED_BANK,
 };
-
-const RED_BANK: &str = "osmo1c3ljch9dfw5kf52nfwpxd2zmj2ese7agnx0p9tenkrryasrle5sqf3ftpg";
 
 pub async fn query_red_bank_tvl(client: &mut QueryClient<Channel>) -> Result<TVL> {
     let mut markets: Vec<Market> = vec![];

@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use cosmos_sdk_proto::cosmwasm::wasm::v1 as wasm;
 use cosmwasm_std::{Coin, Empty, Uint128};
 use cw_vault_standard::msg::VaultStandardQueryMsg;
+use mars_red_bank_types::red_bank::{self, UserDebtResponse};
 use mars_rover::{
     adapters::vault::VaultUnchecked,
     coins::Coins,
@@ -12,13 +13,12 @@ use osmosis_proto::osmosis::gamm::v1beta1 as gamm;
 use tonic::transport::Channel;
 
 use crate::{
-    asset::Asset,
+    asset::{asset_by_denom, Asset},
     error::{Error, Result},
-    tvl::{TVL, TVLItem},
-    utils::{query_wasm_smart, shift_decimals, query_osmosis_pool}, asset::asset_by_denom,
+    tvl::{TVLItem, TVL},
+    utils::{query_osmosis_pool, query_wasm_smart, shift_decimals},
+    RED_BANK, ROVER,
 };
-
-const ROVER: &str = "osmo1f2m24wktq0sw3c0lexlg7fv4kngwyttvzws3a3r3al9ld2s2pvds87jqvf";
 
 pub async fn query_rover_tvl(
     wasm_client: &mut wasm::query_client::QueryClient<Channel>,
@@ -100,7 +100,35 @@ pub async fn query_rover_tvl(
         }
     }
 
-    // TODO: query debt owed by rover to red bank
+    // query debt owed by rover to red bank
+    let mut start_after: Option<String> = None;
+
+    loop {
+        let debts_res: Vec<UserDebtResponse> = query_wasm_smart(
+            wasm_client,
+            RED_BANK,
+            &red_bank::QueryMsg::UserDebts {
+                user: ROVER.into(),
+                start_after: start_after.clone(),
+                limit: Some(10),
+            },
+        )
+        .await?;
+
+        for debt in &debts_res {
+            let asset = asset_by_denom(&debt.denom).ok_or_else(|| Error::AssetNotFound {
+                denom_or_id: debt.denom.clone(),
+            })?;
+
+            increase_borrow(&mut tvl, asset, debt.amount);
+        }
+
+        let Some(last) = debts_res.last() else {
+            break;
+        };
+
+        start_after = Some(last.denom.clone());
+    }
 
     Ok(tvl)
 }
@@ -120,4 +148,9 @@ fn parse_gamm_denom(denom: &str) -> Result<u64> {
 fn increase_deposit(tvl: &mut TVL, asset: &'static Asset, amount_raw: Uint128) {
     let item = tvl.entry(asset).or_insert_with(TVLItem::default);
     item.deposited += shift_decimals(amount_raw, asset.decimals)
+}
+
+fn increase_borrow(tvl: &mut TVL, asset: &'static Asset, amount_raw: Uint128) {
+    let item = tvl.entry(asset).or_insert_with(TVLItem::default);
+    item.borrowed += shift_decimals(amount_raw, asset.decimals)
 }
