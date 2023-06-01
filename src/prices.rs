@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::{
     asset::{asset_by_coingecko_id, Asset, ASSETS},
-    error::{Error, Result}
+    error::{Error, Result},
 };
 
 const COINGECKO_ROOT_URL: &str = "https://api.coingecko.com/api/v3/simple/price";

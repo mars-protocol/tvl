@@ -21,14 +21,15 @@ use osmosis_proto::osmosis::gamm::v1beta1 as gamm;
 use prost::Message;
 use serde::{de::DeserializeOwned, ser::Serialize};
 use tonic::transport::Channel;
-use utils::increase_amount_raw;
 
 use crate::{
     asset::{asset_by_denom, Asset},
     error::{Error, Result},
     prices::query_prices,
     tvl::{print_tvl, TVL},
-    utils::{current_timestamp, decrease_amount, increase_amount, parse_gamm_denom},
+    utils::{
+        current_timestamp, decrease_amount, increase_amount, increase_amount_raw, parse_gamm_denom,
+    },
 };
 
 const OSMOSIS_GRPC: &str = "http://backup.larry.coffee:9090";
