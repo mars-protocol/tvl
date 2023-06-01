@@ -1,5 +1,6 @@
 mod asset;
 mod error;
+mod format;
 mod prices;
 mod tvl;
 mod utils;

@@ -5,6 +5,7 @@ use prettytable::{row, Table};
 use crate::{
     asset::Asset,
     error::Result,
+    format,
     prices::{price_of_asset, Prices},
 };
 
@@ -73,16 +74,16 @@ fn print_rows(rows: &[Row]) {
         if row.amount > 0. {
             table.add_row(row![
                 row.symbol,
-                row.amount,
-                r->row.value,
+                r->format::amount(row.amount),
+                r->format::value(row.value),
             ]);
         }
     }
 
     table.add_row(row![
         "Total",
-        "-",
-        r->total_value,
+        "",
+        r->format::value(total_value),
     ]);
 
     table.set_titles(row!["Token", "Amount", "Value ($)"]);
