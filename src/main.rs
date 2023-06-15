@@ -32,7 +32,7 @@ use crate::{
     },
 };
 
-const OSMOSIS_GRPC: &str = "http://backup.larry.coffee:9090";
+const OSMOSIS_GRPC: &str = "http://backup1.larry.coffee:9090";
 
 const RED_BANK: &str = "osmo1c3ljch9dfw5kf52nfwpxd2zmj2ese7agnx0p9tenkrryasrle5sqf3ftpg";
 
