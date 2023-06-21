@@ -24,18 +24,13 @@ use crate::{
     error::Result,
     prices::query_prices,
     tvl::{print_tvl, TVL},
-    utils::{
-        current_timestamp, decrease_amount, increase_amount, increase_amount_raw,
-    },
+    utils::{current_timestamp, decrease_amount, increase_amount, increase_amount_raw},
 };
 
 const OSMOSIS_GRPC: &str = "http://backup1.larry.coffee:9090";
-
-const RED_BANK: &str = "osmo1c3ljch9dfw5kf52nfwpxd2zmj2ese7agnx0p9tenkrryasrle5sqf3ftpg";
-
-const ROVER: &str = "osmo1f2m24wktq0sw3c0lexlg7fv4kngwyttvzws3a3r3al9ld2s2pvds87jqvf";
-
-const ZAPPER: &str = "osmo17qwvc70pzc9mudr8t02t3pl74hhqsgwnskl734p4hug3s8mkerdqzduf7c";
+const RED_BANK:     &str = "osmo1c3ljch9dfw5kf52nfwpxd2zmj2ese7agnx0p9tenkrryasrle5sqf3ftpg";
+const ROVER:        &str = "osmo1f2m24wktq0sw3c0lexlg7fv4kngwyttvzws3a3r3al9ld2s2pvds87jqvf";
+const ZAPPER:       &str = "osmo17qwvc70pzc9mudr8t02t3pl74hhqsgwnskl734p4hug3s8mkerdqzduf7c";
 
 #[tokio::main]
 async fn main() -> Result<()> {

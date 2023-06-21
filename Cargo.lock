@@ -2290,7 +2290,6 @@ dependencies = [
  "prettytable",
  "reqwest",
  "serde",
- "serde_json",
  "thiserror",
  "tokio",
  "tonic",
