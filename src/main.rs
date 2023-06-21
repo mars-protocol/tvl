@@ -5,8 +5,6 @@ mod prices;
 mod tvl;
 mod utils;
 
-use std::collections::HashMap;
-
 use cosmos_sdk_proto::cosmwasm::wasm::v1 as wasm;
 use cosmwasm_std::{from_slice, to_vec, Coin, Empty, Uint128};
 use cw_vault_standard::msg::VaultStandardQueryMsg;
@@ -17,18 +15,17 @@ use mars_rover::{
     coins::Coins,
     msg::query::{QueryMsg as RoverQueryMsg, VaultInfoResponse},
 };
-use osmosis_proto::osmosis::gamm::v1beta1 as gamm;
-use prost::Message;
+use mars_zapper_base as zapper;
 use serde::{de::DeserializeOwned, ser::Serialize};
 use tonic::transport::Channel;
 
 use crate::{
-    asset::{asset_by_denom, Asset},
-    error::{Error, Result},
+    asset::asset_by_denom,
+    error::Result,
     prices::query_prices,
     tvl::{print_tvl, TVL},
     utils::{
-        current_timestamp, decrease_amount, increase_amount, increase_amount_raw, parse_gamm_denom,
+        current_timestamp, decrease_amount, increase_amount, increase_amount_raw,
     },
 };
 
@@ -38,6 +35,8 @@ const RED_BANK: &str = "osmo1c3ljch9dfw5kf52nfwpxd2zmj2ese7agnx0p9tenkrryasrle5s
 
 const ROVER: &str = "osmo1f2m24wktq0sw3c0lexlg7fv4kngwyttvzws3a3r3al9ld2s2pvds87jqvf";
 
+const ZAPPER: &str = "osmo17qwvc70pzc9mudr8t02t3pl74hhqsgwnskl734p4hug3s8mkerdqzduf7c";
+
 #[tokio::main]
 async fn main() -> Result<()> {
     println!("querying prices from coingecko...");
@@ -46,7 +45,6 @@ async fn main() -> Result<()> {
 
     println!("connecting to osmosis grpc...");
     let mut wasm_client = wasm::query_client::QueryClient::connect(OSMOSIS_GRPC).await?;
-    let mut gamm_client = gamm::query_client::QueryClient::connect(OSMOSIS_GRPC).await?;
     println!("done!");
 
     println!("querying red bank markets...");
@@ -58,7 +56,7 @@ async fn main() -> Result<()> {
     println!("done!");
 
     println!("computing rover tvl...");
-    let rover_tvl = query_rover_tvl(&mut wasm_client, &mut gamm_client).await?;
+    let rover_tvl = query_rover_tvl(&mut wasm_client).await?;
     println!("done!");
 
     println!("computing total protocol tvl...");
@@ -138,7 +136,6 @@ fn compute_red_bank_tvl(markets: &[Market]) -> Result<TVL> {
 
 async fn query_rover_tvl(
     wasm_client: &mut wasm::query_client::QueryClient<Channel>,
-    gamm_client: &mut gamm::query_client::QueryClient<Channel>,
 ) -> Result<TVL> {
     let mut tvl = TVL::default();
     // there isn't a Coins::new method so we have to initialize it like this
@@ -201,20 +198,23 @@ async fn query_rover_tvl(
     // for each gamm token, convert it to underlying asset amounts and add to
     // Rover deposits
     for coin in coins.into_vec() {
-        match asset_by_denom(&coin.denom) {
-            Ok(asset) => {
-                increase_amount_raw(&mut tvl.deposits, asset, coin.amount.u128());
-            },
-            Err(_) => {
-                // for other assets, we only support osmosis gamm tokens
-                let pool_id = parse_gamm_denom(&coin.denom)?;
-                let pool = query_osmosis_pool(gamm_client, pool_id).await?;
+        if let Ok(asset) = asset_by_denom(&coin.denom) {
+            increase_amount_raw(&mut tvl.deposits, asset, coin.amount.u128());
+            continue;
+        }
 
-                for (asset, reserve) in pool.reserves {
-                    let amount_raw = reserve * coin.amount.u128() / pool.total_shares;
-                    increase_amount_raw(&mut tvl.deposits, asset, amount_raw);
-                }
+        let coins_out: Vec<Coin> = query_wasm_smart(
+            wasm_client,
+            ZAPPER,
+            &zapper::QueryMsg::EstimateWithdrawLiquidity {
+                coin_in: coin,
             },
+        )
+        .await?;
+
+        for coin_out in coins_out {
+            let asset = asset_by_denom(&coin_out.denom)?;
+            increase_amount_raw(&mut tvl.deposits, asset, coin_out.amount.u128());
         }
     }
 
@@ -261,59 +261,6 @@ fn compute_protocol_tvl(red_bank_tvl: &TVL, rover_tvl: &TVL) -> TVL {
     }
 
     protocol_tvl
-}
-
-pub struct PoolResponse {
-    // denom => amount
-    pub reserves: HashMap<&'static Asset, u128>,
-    pub total_shares: u128,
-}
-
-pub async fn query_osmosis_pool(
-    client: &mut gamm::query_client::QueryClient<Channel>,
-    pool_id: u64,
-) -> Result<PoolResponse> {
-    // NOTE: this query will be deprecated in v16. use poolmanager module instead
-    let pool_any = client
-        .pool(gamm::QueryPoolRequest {
-            pool_id,
-        })
-        .await?
-        .into_inner()
-        .pool
-        .ok_or(Error::PoolNotFound {
-            pool_id,
-        })?;
-
-    let pool = gamm::Pool::decode(pool_any.value.as_slice())?;
-
-    let reserves = pool
-        .pool_assets
-        .iter()
-        .map(|pool_asset| {
-            let token = pool_asset.token.as_ref().ok_or_else(|| Error::TokenUndefined {
-                pool_id,
-            })?;
-
-            let asset = asset_by_denom(&token.denom)?;
-            let amount = token.amount.parse()?;
-
-            Ok((asset, amount))
-        })
-        .collect::<Result<_>>()?;
-
-    let total_shares = pool
-        .total_shares
-        .ok_or_else(|| Error::TotalSharesUndefined {
-            pool_id,
-        })?
-        .amount
-        .parse()?;
-
-    Ok(PoolResponse {
-        reserves,
-        total_shares,
-    })
 }
 
 pub async fn query_wasm_smart<M, R>(

@@ -1,9 +1,6 @@
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error(transparent)]
-    Decode(#[from] prost::DecodeError),
-
-    #[error(transparent)]
     GRPCStatus(#[from] tonic::Status),
 
     #[error(transparent)]
